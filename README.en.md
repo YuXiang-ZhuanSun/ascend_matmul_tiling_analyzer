@@ -1,5 +1,11 @@
 # MatMul Tiling Analyzer
 
+[![CI](https://github.com/YuXiang-ZhuanSun/ascend_matmul_tiling_analyzer/actions/workflows/ci.yml/badge.svg)](https://github.com/YuXiang-ZhuanSun/ascend_matmul_tiling_analyzer/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+[![Python](https://img.shields.io/badge/python-3.10%2B-3776AB.svg)](./pyproject.toml)
+
+**Tags:** `ascend950` `matmul` `tiling` `operator-analysis` `kernel-scheduling`
+
 [中文 README](./README.zh-CN.md) | [Project Home](./README.md)
 
 ## Overview
@@ -127,8 +133,10 @@ matmul_tiling_analyzer/
 - [Ascend950 Tiling Strategy](./docs/ascend950_tiling_strategy.md)
 - [Source Branch Mapping](./docs/source_branch_mapping.md)
 - [Example Outputs](./docs/example_outputs.md)
+- [Release Notes v0.1.0](./docs/release_notes_v0.1.0.md)
 - [Changelog](./CHANGELOG.md)
 - [Contributing](./CONTRIBUTING.md)
+- [Code of Conduct](./CODE_OF_CONDUCT.md)
 
 ## Development Notes
 

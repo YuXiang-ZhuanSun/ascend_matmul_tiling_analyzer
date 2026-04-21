@@ -1,5 +1,12 @@
 # MatMul Tiling Analyzer
 
+[![CI](https://github.com/YuXiang-ZhuanSun/ascend_matmul_tiling_analyzer/actions/workflows/ci.yml/badge.svg)](https://github.com/YuXiang-ZhuanSun/ascend_matmul_tiling_analyzer/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+[![Python](https://img.shields.io/badge/python-3.10%2B-3776AB.svg)](./pyproject.toml)
+[![Platform](https://img.shields.io/badge/platform-Ascend950-D46B08.svg)](./docs/ascend950_tiling_strategy.md)
+
+**Tags:** `ascend950` `matmul` `tiling` `operator-analysis` `kernel-scheduling` `dav_3510`
+
 [中文 README](./README.zh-CN.md) | [English README](./README.en.md)
 
 `MatMul Tiling Analyzer` is a Python project for analyzing `mat_mul_v3` tiling behavior on `Ascend950 (DAV_3510)`.
@@ -7,6 +14,17 @@ It replays host-side strategy selection, reconstructs `tiling_key` and `tiling_d
 
 `MatMul Tiling Analyzer` 是一个面向 `Ascend950 (DAV_3510)` 的 `mat_mul_v3` tiling 分析项目。
 它会复现 host 侧策略选择过程，重建 `tiling_key` / `tiling_data`，映射到 `mat_mul_v3_apt.cpp` 的 kernel 分发逻辑，并展开每个核心上的预期负载。
+
+## Banner
+
+```text
+  __  __       _   __  __       _ _   _______ _ _ _             
+ |  \/  | __ _| |_|  \/  | __ _| | | |_   _(_) (_)_ __   __ _  
+ | |\/| |/ _` | __| |\/| |/ _` | | |   | | | | | | '_ \ / _` | 
+ | |  | | (_| | |_| |  | | (_| | | |   | | | | | | | | | (_| | 
+ |_|  |_|\__,_|\__|_|  |_|\__,_|_|_|   |_| |_|_|_|_| |_|\__, | 
+                                                         |___/  
+```
 
 ## Why This Project
 
@@ -91,8 +109,10 @@ matmul_tiling_analyzer/
 - [Ascend950 Tiling Strategy](./docs/ascend950_tiling_strategy.md)
 - [Source Branch Mapping](./docs/source_branch_mapping.md)
 - [Example Outputs](./docs/example_outputs.md)
+- [Release Notes v0.1.0](./docs/release_notes_v0.1.0.md)
 - [Changelog](./CHANGELOG.md)
 - [Contributing](./CONTRIBUTING.md)
+- [Code of Conduct](./CODE_OF_CONDUCT.md)
 
 ## Supported Inputs
 
