@@ -9,22 +9,13 @@
 
 [中文 README](./README.zh-CN.md) | [English README](./README.en.md)
 
+![MatMul Tiling Analyzer Banner](./docs/assets/banner.svg)
+
 `MatMul Tiling Analyzer` is a Python project for analyzing `mat_mul_v3` tiling behavior on `Ascend950 (DAV_3510)`.
 It replays host-side strategy selection, reconstructs `tiling_key` and `tiling_data`, maps the selected path to `mat_mul_v3_apt.cpp`, and expands the expected workload on every core.
 
 `MatMul Tiling Analyzer` 是一个面向 `Ascend950 (DAV_3510)` 的 `mat_mul_v3` tiling 分析项目。
 它会复现 host 侧策略选择过程，重建 `tiling_key` / `tiling_data`，映射到 `mat_mul_v3_apt.cpp` 的 kernel 分发逻辑，并展开每个核心上的预期负载。
-
-## Banner
-
-```text
-  __  __       _   __  __       _ _   _______ _ _ _             
- |  \/  | __ _| |_|  \/  | __ _| | | |_   _(_) (_)_ __   __ _  
- | |\/| |/ _` | __| |\/| |/ _` | | |   | | | | | | '_ \ / _` | 
- | |  | | (_| | |_| |  | | (_| | | |   | | | | | | | | | (_| | 
- |_|  |_|\__,_|\__|_|  |_|\__,_|_|_|   |_| |_|_|_|_| |_|\__, | 
-                                                         |___/  
-```
 
 ## Why This Project
 
