@@ -3,43 +3,60 @@
 [![CI](https://github.com/YuXiang-ZhuanSun/ascend_matmul_tiling_analyzer/actions/workflows/ci.yml/badge.svg)](https://github.com/YuXiang-ZhuanSun/ascend_matmul_tiling_analyzer/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-3776AB.svg)](./pyproject.toml)
+[![源码同构](https://img.shields.io/badge/strategy-源码同构-0A7E8C.svg)](./docs/source_branch_mapping.md)
 
-**标签：** `ascend950` `matmul` `tiling` `算子分析` `kernel调度`
+[项目首页](./README.md) | [English README](./README.en.md)
 
-[English README](./README.en.md) | [Project Home](./README.md)
+![MatMul Tiling Analyzer Banner](./docs/assets/banner.svg)
 
-## 项目简介
+**像读源码一样读 tiling，像内核工程师一样做性能诊断。**
 
-`MatMul Tiling Analyzer` 是一个面向 `Ascend950 (DAV_3510)` 的 `mat_mul_v3` tiling 分析项目。
-项目的目标不是凭经验“猜”某个用例会如何分块，而是尽量沿着源码中的真实决策路径，重放 host 侧的 tiling 分支选择，提取 `tiling_key` / `tiling_data`，并把 kernel 侧的分核、分块和每核负载整理成可读报告。
+MatMul 调优里最贵的往往不是算力，而是不确定性：这个 shape 到底命中了哪条分支？分核是否均衡？芯片是否真的被喂满？  
+`MatMul Tiling Analyzer` 把这些问题变成可核对证据。它重放真实 `mat_mul_v3` 的 tiling 决策，并展开成每个核心的负载视图。
 
-当前重点覆盖：
+## 为什么做这个项目
 
-- `op_host` 中 Ascend950 相关的 tiling 策略选择逻辑
-- `mat_mul_v3_apt.cpp` 中的 kernel dispatch
-- `block_scheduler_*` 中的分核和核内任务展开
-- 紧凑 CSV 与扩展 fuzz CSV 两类输入格式
+- 在昂贵 profiling 之前，先发现分支与调度层面的错误。
+- 判断核间/核内分块是否合理，避免“看起来能跑、实际上吃不满”。
+- 用每核负载与尾块信息定位潜在性能瓶颈。
+- 为性能评审、回归排查提供可读、可复现、可沟通的分析产物。
 
-## 这个项目能做什么
+## 可信度来自哪里
 
-- 判断一个 `mat_mul_v3` 用例会落到哪条 tiling 分支
-- 输出 `tiling_key`、关键字段拆解和核心 `tiling_data`
-- 展示核间分工、核内分块和每个核心的预期任务
-- 把“分析器分支”和“源码分支”建立稳定映射，方便补齐和维护
-- 生成适合调试、归档和发布的批量结果文件
+这个项目的核心不是“经验猜测”，而是“源码同构”。
+
+- 用 Python 重写 Ascend C `mat_mul_v3` 的 tiling 策略。
+- 与官方算子仓保持分支级映射：[`ops-nn/mat_mul_v3`](https://gitcode.com/cann/ops-nn/tree/master/matmul/mat_mul_v3)
+- 把 host 侧分支选择、`tiling_key` / `tiling_data`、kernel dispatch、schedule 分解串成一条可追溯链路。
+
+## 你能得到什么
+
+单个 case 输出：
+
+- 命中的策略与源码分支
+- `tiling_key` 关键字段解码
+- 相关 `tiling_data` 字段
+- 核间分核与核内分块结果
+- 每核工作负载摘要与任务布局
+
+批量输出：
+
+- `summary.json`
+- `summary.csv`
+- `cases/<testcase>.json`
+- `cases/<testcase>.txt`
 
 ## 快速开始
 
 ```powershell
-cd .\matmul_tiling_analyzer
 python -m pip install -e .
-python .\cli.py --input=.\cases\quickstart_cases.csv --output-dir=.\results\quickstart
+python cli.py --input=cases/quickstart_cases.csv --output-dir=results/quickstart
 ```
 
-分析单个 case：
+单 case 分析：
 
 ```powershell
-python .\cli.py --m 2048 --k 4096 --n 256 --dtype bfloat16
+python cli.py --m 2048 --k 4096 --n 256 --dtype bfloat16
 ```
 
 运行测试：
@@ -48,102 +65,24 @@ python .\cli.py --m 2048 --k 4096 --n 256 --dtype bfloat16
 python -m pytest
 ```
 
-## 命令行用法
+## 项目范围
 
-批量分析 CSV：
-
-```powershell
-python .\cli.py --input=.\cases\user_provided_extended_cases.csv --output-dir=.\results\user_provided_extended
-```
-
-输出 JSON：
-
-```powershell
-python .\cli.py --input=.\cases\quickstart_cases.csv --format=json
-```
-
-分析单个转置 case：
-
-```powershell
-python .\cli.py --m 100 --k 1920 --n 512 --dtype float16 --transpose-x1
-```
-
-## 当前覆盖的主分支
-
-- `k_equal_zero`
-- `to_mul`
-- `basic_streamk`
-- `basic_aswt`
-- `basic_aswt_a_full_load`
-- `basic_aswt_b_full_load`
-- `basic_aswt_fixpipe`
-
-更详细的源码映射见 [docs/source_branch_mapping.md](./docs/source_branch_mapping.md)。
-
-## 支持的输入格式
-
-分析器目前支持两类输入：
-
-- 紧凑 schema：`testcase_name, op_name, stc_inputs, ...`
-- 扩展 schema：`testcase_name, network_name, op_name, stc_inputs, stc_ori_inputs, ...`
-
-对于扩展 schema，工具会：
-
-- 从 compilation/runtime 参数中读取 transpose 信息
-- 在 transpose 生效后推导 `(m, k, n)`
-- 从静态输入元组判断 bias 是否存在
-- 将原始 CSV 行保存在结果中，便于追溯
-
-## 输出结果
-
-当指定 `--output-dir` 时，工具会生成：
-
-- `summary.json`
-- `summary.csv`
-- `cases/<testcase>.json`
-- `cases/<testcase>.txt`
-
-示例可见 [docs/example_outputs.md](./docs/example_outputs.md)。
-
-## 目录结构
-
-```text
-matmul_tiling_analyzer/
-  cli.py
-  analyze_cases.py
-  pyproject.toml
-  LICENSE
-  CHANGELOG.md
-  CONTRIBUTING.md
-  README.md
-  README.zh-CN.md
-  README.en.md
-  cases/
-  docs/
-  matmul_tiling_analyzer/
-  tests/
-  results/
-```
+- 当前重点：`mat_mul_v3` 算子 tiling 分析
+- 当前文档与示例覆盖硬件：`Ascend950 (DAV_3510)`
+- 项目定位：分析诊断工具，不是运行时替代品
 
 ## 文档导航
 
 - [项目首页](./README.md)
 - [English README](./README.en.md)
+- [源码分支映射表](./docs/source_branch_mapping.md)
 - [Ascend950 Tiling Strategy](./docs/ascend950_tiling_strategy.md)
-- [Source Branch Mapping](./docs/source_branch_mapping.md)
-- [Example Outputs](./docs/example_outputs.md)
+- [示例输出](./docs/example_outputs.md)
 - [Release Notes v0.1.0](./docs/release_notes_v0.1.0.md)
-- [Changelog](./CHANGELOG.md)
-- [Contributing](./CONTRIBUTING.md)
-- [Code of Conduct](./CODE_OF_CONDUCT.md)
+- [贡献指南](./CONTRIBUTING.md)
+- [行为准则](./CODE_OF_CONDUCT.md)
+- [更新日志](./CHANGELOG.md)
 
-## 开发约定
+## 许可证
 
-- 优先补齐源码中的真实分支，再考虑额外抽象
-- 新增分支时，先更新 `source_mapping.py` 和映射文档
-- 每个新增分支都补至少一个代表用例和一个边界用例
-- 文档里明确区分“源码事实”和“分析器推断”
-
-## License
-
-项目当前采用 [MIT License](./LICENSE)。
+本项目基于 [MIT License](./LICENSE) 开源。

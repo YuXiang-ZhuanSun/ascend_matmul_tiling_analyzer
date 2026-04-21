@@ -3,48 +3,60 @@
 [![CI](https://github.com/YuXiang-ZhuanSun/ascend_matmul_tiling_analyzer/actions/workflows/ci.yml/badge.svg)](https://github.com/YuXiang-ZhuanSun/ascend_matmul_tiling_analyzer/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-3776AB.svg)](./pyproject.toml)
-[![Platform](https://img.shields.io/badge/platform-Ascend950-D46B08.svg)](./docs/ascend950_tiling_strategy.md)
-
-**Tags:** `ascend950` `matmul` `tiling` `operator-analysis` `kernel-scheduling` `dav_3510`
+[![Source-Faithful](https://img.shields.io/badge/strategy-source--faithful-0A7E8C.svg)](./docs/source_branch_mapping.md)
 
 [中文 README](./README.zh-CN.md) | [English README](./README.en.md)
 
 ![MatMul Tiling Analyzer Banner](./docs/assets/banner.svg)
 
-`MatMul Tiling Analyzer` is a Python project for analyzing `mat_mul_v3` tiling behavior on `Ascend950 (DAV_3510)`.
-It replays host-side strategy selection, reconstructs `tiling_key` and `tiling_data`, maps the selected path to `mat_mul_v3_apt.cpp`, and expands the expected workload on every core.
+**Read tiling like source code. Diagnose performance like a kernel engineer.**
 
-`MatMul Tiling Analyzer` 是一个面向 `Ascend950 (DAV_3510)` 的 `mat_mul_v3` tiling 分析项目。
-它会复现 host 侧策略选择过程，重建 `tiling_key` / `tiling_data`，映射到 `mat_mul_v3_apt.cpp` 的 kernel 分发逻辑，并展开每个核心上的预期负载。
+Most matmul tuning time is not spent on arithmetic. It is spent on uncertainty: did this shape hit the right tiling branch, is core splitting balanced, and is the chip actually saturated.  
+`MatMul Tiling Analyzer` turns that uncertainty into evidence by replaying real `mat_mul_v3` tiling logic and expanding it into per-core workload views.
 
 ## Why This Project
 
-- Analyze real `mat_mul_v3` tiling branches instead of using black-box guesses
-- Keep analyzer behavior traceable to concrete source files and strategy branches
-- Make inter-core and intra-core blocking visible in a report-friendly format
-- Support both regression CSV and fuzz CSV case formats
+- Surface branch-level scheduling mistakes before expensive profiling loops.
+- Check whether inter-core and intra-core partitioning is reasonable for a shape.
+- Explain utilization risks and bottlenecks with concrete per-core load data.
+- Provide a shared, readable artifact for performance review and regression tracking.
 
-## Features
+## What Makes It Credible
 
-- Ascend950-focused tiling analysis for `mat_mul_v3`
-- Reconstruction of `tiling_key`, `tiling_key_fields`, and critical `tiling_data`
-- Mapping from host branch to kernel dispatch and scheduler behavior
-- Batch export to `summary.json`, `summary.csv`, per-case `.json`, and readable `.txt`
-- Per-core workload presentation with active-core summaries
-- Test coverage for the CSV parser
+This project is built on **source alignment**, not heuristic approximation.
+
+- Tiling strategy is rewritten in Python from the real Ascend C operator implementation.
+- Branch mapping is maintained against the official operator repository: [`ops-nn/mat_mul_v3`](https://gitcode.com/cann/ops-nn/tree/master/matmul/mat_mul_v3)
+- Host-side selection, `tiling_key` / `tiling_data`, kernel dispatch, and schedule decomposition are connected in one traceable path.
+
+## What You Get
+
+For each case:
+
+- selected strategy and source-mapped branch
+- decoded `tiling_key` and key fields
+- relevant `tiling_data` payload
+- inter-core split and intra-core block plan
+- per-core workload summary and kernel task layout
+
+For batch runs:
+
+- `summary.json`
+- `summary.csv`
+- `cases/<testcase>.json`
+- `cases/<testcase>.txt`
 
 ## Quick Start
 
 ```powershell
-cd .\matmul_tiling_analyzer
 python -m pip install -e .
-python .\cli.py --input=.\cases\quickstart_cases.csv --output-dir=.\results\quickstart
+python cli.py --input=cases/quickstart_cases.csv --output-dir=results/quickstart
 ```
 
-Analyze a single case:
+Single case:
 
 ```powershell
-python .\cli.py --m 2048 --k 4096 --n 256 --dtype bfloat16
+python cli.py --m 2048 --k 4096 --n 256 --dtype bfloat16
 ```
 
 Run tests:
@@ -53,97 +65,24 @@ Run tests:
 python -m pytest
 ```
 
-## Command-Line Usage
+## Scope
 
-Batch analysis:
-
-```powershell
-python .\cli.py --input=.\cases\user_provided_extended_cases.csv --output-dir=.\results\user_provided_extended
-```
-
-JSON output:
-
-```powershell
-python .\cli.py --input=.\cases\quickstart_cases.csv --format=json
-```
-
-Single-case analysis:
-
-```powershell
-python .\cli.py --m 100 --k 1920 --n 512 --dtype float16 --transpose-x1
-```
-
-## Repository Layout
-
-```text
-matmul_tiling_analyzer/
-  cli.py
-  analyze_cases.py
-  pyproject.toml
-  LICENSE
-  CHANGELOG.md
-  CONTRIBUTING.md
-  README.md
-  README.zh-CN.md
-  README.en.md
-  cases/
-  docs/
-  matmul_tiling_analyzer/
-  tests/
-  results/
-```
+- Current implementation focus: `mat_mul_v3`
+- Current hardware scope in strategy docs/examples: `Ascend950 (DAV_3510)`
+- Positioning: analysis and diagnosis tool, not runtime replacement
 
 ## Documentation
 
-- [中文 README](./README.zh-CN.md)
-- [English README](./README.en.md)
-- [Ascend950 Tiling Strategy](./docs/ascend950_tiling_strategy.md)
+- [README.zh-CN.md](./README.zh-CN.md)
+- [README.en.md](./README.en.md)
 - [Source Branch Mapping](./docs/source_branch_mapping.md)
+- [Ascend950 Tiling Strategy](./docs/ascend950_tiling_strategy.md)
 - [Example Outputs](./docs/example_outputs.md)
 - [Release Notes v0.1.0](./docs/release_notes_v0.1.0.md)
-- [Changelog](./CHANGELOG.md)
 - [Contributing](./CONTRIBUTING.md)
 - [Code of Conduct](./CODE_OF_CONDUCT.md)
-
-## Supported Inputs
-
-The analyzer supports:
-
-- compact CSV schemas such as `testcase_name, op_name, stc_inputs, ...`
-- extended fuzz CSV schemas such as `testcase_name, network_name, op_name, stc_inputs, stc_ori_inputs, ...`
-
-For extended rows, the parser will:
-
-- read transpose flags from compilation/runtime attributes
-- derive `(m, k, n)` after transpose is applied
-- detect bias presence from the static input tuple
-- preserve the raw CSV row for traceability
-
-## Output Artifacts
-
-When `--output-dir` is provided, the project writes:
-
-- `summary.json`
-- `summary.csv`
-- `cases/<testcase>.json`
-- `cases/<testcase>.txt`
-
-Examples are documented in [docs/example_outputs.md](./docs/example_outputs.md).
-
-## Project Status
-
-The current implementation focuses on the major Ascend950 branches already modeled in the repository:
-
-- `k_equal_zero`
-- `to_mul`
-- `basic_streamk`
-- `basic_aswt`
-- `basic_aswt_a_full_load`
-- `basic_aswt_b_full_load`
-- `basic_aswt_fixpipe`
-
-Future work should continue to expand source coverage branch by branch and keep the source mapping document up to date.
+- [Changelog](./CHANGELOG.md)
 
 ## License
 
-This project is released under the [MIT License](./LICENSE).
+This project is licensed under [MIT](./LICENSE).
