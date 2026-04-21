@@ -1,0 +1,2 @@
+testcase_name,op_name,dyn_inputs,stc_inputs,dyn_input_dtypes,stc_input_dtypes,output_dtypes,dyn_outputs,stc_outputs,dyn_input_formats,other_compilation_params,other_runtime_params
+mat_mul_v3_M_2048_K_4096_N_256_case14,mat_mul_v3,"((-1, -1), (-1, -1), None, None)","((2048, 4096), (4096, 256), None, None)","('bfloat16', 'bfloat16', 'int8', 'int8')","('bfloat16', 'bfloat16', 'int8', 'int8')","('bfloat16',)","((-1, -1),)","((2048, 256),)","('ND',)","{'transpose_x1': False, 'transpose_x2': False}","{'transpose_x1': False, 'transpose_x2': False}"

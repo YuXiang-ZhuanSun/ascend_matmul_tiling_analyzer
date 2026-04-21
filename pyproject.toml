@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "matmul-tiling-analyzer"
+version = "0.2.0"
+description = "Ascend950 MatMulV3 tiling analysis toolkit."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+  { name = "Xiang" }
+]
+license = { text = "MIT" }
+keywords = ["ascend950", "matmul", "tiling", "analyzer", "dav3510"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Topic :: Software Development :: Build Tools",
+  "Topic :: Scientific/Engineering",
+]
+dependencies = []
+
+[project.scripts]
+matmul-tiling-analyzer = "matmul_tiling_analyzer.cli:main"
+
+[tool.setuptools]
+packages = ["matmul_tiling_analyzer"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
