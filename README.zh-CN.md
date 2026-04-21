@@ -3,59 +3,48 @@
 [![CI](https://github.com/YuXiang-ZhuanSun/ascend_matmul_tiling_analyzer/actions/workflows/ci.yml/badge.svg)](https://github.com/YuXiang-ZhuanSun/ascend_matmul_tiling_analyzer/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-3776AB.svg)](./pyproject.toml)
-[![Source-Faithful](https://img.shields.io/badge/strategy-source--faithful-0A7E8C.svg)](./docs/source_branch_mapping.md)
+[![源码同构](https://img.shields.io/badge/strategy-源码同构-0A7E8C.svg)](./docs/source_branch_mapping.md)
 
-[项目首页](./README.md) | [English README](./README.en.md) | [源码分支映射](./docs/source_branch_mapping.md) | [策略手册](./docs/ascend950_tiling_strategy.md) | [输出示例](./docs/example_outputs.md)
+[项目首页](./README.md) | [English README](./README.en.md)
 
 ![MatMul Tiling Analyzer Banner](./docs/assets/banner.svg)
 
 **像读源码一样读 tiling，像内核工程师一样做性能诊断。**
 
-在 `mat_mul_v3` 的调优实践里，最昂贵的往往不是计算本身，而是不可见的决策路径：
-这条 shape 命中了哪个分支？分核是否均衡？尾块是否正在悄悄吞噬吞吐？
+MatMul 调优里最贵的往往不是算力，而是不确定性：这个 shape 到底命中了哪条分支？分核是否均衡？芯片是否真的被喂满？  
+`MatMul Tiling Analyzer` 把这些问题变成可核对证据。它重放真实 `mat_mul_v3` 的 tiling 决策，并展开成每个核心的负载视图。
 
-`MatMul Tiling Analyzer` 将这些不确定性转化为可验证证据：
-按源码语义重放策略选择，解码 `tiling_key` 与 `tiling_data`，并展开到每个核心的任务负载视图。
+## 为什么做这个项目
 
-## About
+- 在昂贵 profiling 之前，先发现分支与调度层面的错误。
+- 判断核间/核内分块是否合理，避免“看起来能跑、实际上吃不满”。
+- 用每核负载与尾块信息定位潜在性能瓶颈。
+- 为性能评审、回归排查提供可读、可复现、可沟通的分析产物。
 
-`MatMul Tiling Analyzer` 是面向 **Ascend950 (DAV_3510) / MatMulV3** 的 tiling 分析与诊断工具。
-它不替代 runtime，不做启发式猜测，而是把 host 侧分支、kernel 派发与 scheduler 行为连接为一条可追踪链路，服务于调优定位、回归评审与跨团队协作。
+## 可信度来自哪里
 
-## 为什么重要
+这个项目的核心不是“经验猜测”，而是“源码同构”。
 
-- 在进入漫长 profiling 循环前，先确认策略分支是否正确。
-- 在“可以跑”之外，量化 inter-core / intra-core 切分质量。
-- 用每核任务与尾块信息，快速暴露负载不均与利用率损失。
-- 产出可复现、可审阅、可自动化处理的报告资产。
+- 用 Python 重写 Ascend C `mat_mul_v3` 的 tiling 策略。
+- 与官方算子仓保持分支级映射：[`ops-nn/mat_mul_v3`](https://gitcode.com/cann/ops-nn/tree/master/matmul/mat_mul_v3)
+- 把 host 侧分支选择、`tiling_key` / `tiling_data`、kernel dispatch、schedule 分解串成一条可追溯链路。
 
-## 你可以验证什么
+## 你能得到什么
 
-- **策略选择**：`k_equal_zero`、`to_mul`、`basic_streamk`、`basic_aswt`
-- **分支细节**：`streamk_sk` / `streamk_dpsk`、`basic_aswt_a_full_load` / `basic_aswt_b_full_load`
-- **键值语义**：`tiling_key` 字段级解码（`api_level`、`model`、`full_load`、`l0c2out` 等）
-- **调度结果**：inter-core 切分、intra-core 分块、每核任务列表
-- **导出产物**：单 case 文本/JSON，批量 `summary.csv` / `summary.json`
+单个 case 输出：
 
-## 策略覆盖（当前）
+- 命中的策略与源码分支
+- `tiling_key` 关键字段解码
+- 相关 `tiling_data` 字段
+- 核间分核与核内分块结果
+- 每核工作负载摘要与任务布局
 
-| Strategy | 分析器中的典型触发条件 | Kernel implementation |
-| --- | --- | --- |
-| `k_equal_zero` | `k == 0` 且无 bias | `MatMulInputKEqZeroClearOutput` |
-| `to_mul` | 强制 group acc + fp32 + (`m==1` 或 `n==1`) + `k>=512` | `MatMulToMulActKernel` |
-| `basic_streamk` | `x1_format == ND` 且 Stream-K 能力检查通过 | `MatMulStreamKActKernel` |
-| `basic_aswt` | 默认回退路径（含 full-load / fixpipe 变体） | `MatMulActKernel` / `MatMulFixpipeOptiActKernel` |
+批量输出：
 
-## 工作流程
-
-```mermaid
-flowchart LR
-    A["Case Input (CLI/CSV)"] --> B["Strategy Selection"]
-    B --> C["Tiling Key Decode"]
-    C --> D["Tiling Data Reconstruction"]
-    D --> E["Scheduler-Level Per-Core Simulation"]
-    E --> F["Text / JSON Reports + Batch Summaries"]
-```
+- `summary.json`
+- `summary.csv`
+- `cases/<testcase>.json`
+- `cases/<testcase>.txt`
 
 ## 快速开始
 
@@ -70,44 +59,25 @@ python cli.py --input=cases/quickstart_cases.csv --output-dir=results/quickstart
 python cli.py --m 2048 --k 4096 --n 256 --dtype bfloat16
 ```
 
-也可使用安装后的命令：
-
-```powershell
-matmul-tiling-analyzer --m 2048 --k 4096 --n 256 --dtype bfloat16
-```
-
 运行测试：
 
 ```powershell
 python -m pytest
 ```
 
-## 输出产物
+## 项目范围
 
-当指定 `--output-dir` 时，输出目录结构如下：
-
-```text
-results/<run_name>/
-  summary.csv
-  summary.json
-  cases/
-    <testcase>.json
-    <testcase>.txt
-```
-
-## 范围与非目标
-
-- 当前重点：`mat_mul_v3` tiling 分析
-- 当前文档/样例覆盖硬件：`Ascend950 (DAV_3510)`
-- 项目定位：分析与诊断工具，不是执行时替代实现
+- 当前重点：`mat_mul_v3` 算子 tiling 分析
+- 当前文档与示例覆盖硬件：`Ascend950 (DAV_3510)`
+- 项目定位：分析诊断工具，不是运行时替代品
 
 ## 文档导航
 
 - [项目首页](./README.md)
 - [English README](./README.en.md)
-- [源码分支映射](./docs/source_branch_mapping.md)
+- [源码分支映射表](./docs/source_branch_mapping.md)
 - [Ascend950 Tiling Strategy](./docs/ascend950_tiling_strategy.md)
-- [输出示例](./docs/example_outputs.md)
+- [示例输出](./docs/example_outputs.md)
 - [Release Notes v0.1.0](./docs/release_notes_v0.1.0.md)
 - [贡献指南](./CONTRIBUTING.md)
 - [行为准则](./CODE_OF_CONDUCT.md)

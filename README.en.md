@@ -5,57 +5,46 @@
 [![Python](https://img.shields.io/badge/python-3.10%2B-3776AB.svg)](./pyproject.toml)
 [![Source-Faithful](https://img.shields.io/badge/strategy-source--faithful-0A7E8C.svg)](./docs/source_branch_mapping.md)
 
-[Project Home](./README.md) | [中文 README](./README.zh-CN.md) | [Source Branch Mapping](./docs/source_branch_mapping.md) | [Strategy Handbook](./docs/ascend950_tiling_strategy.md) | [Example Outputs](./docs/example_outputs.md)
+[Project Home](./README.md) | [中文 README](./README.zh-CN.md)
 
 ![MatMul Tiling Analyzer Banner](./docs/assets/banner.svg)
 
 **Read tiling like source code. Diagnose performance like a kernel engineer.**
 
-In `mat_mul_v3` optimization, the most expensive part is often not arithmetic itself but hidden decision paths:
-which branch did this shape hit, is core splitting balanced, and are tail blocks silently consuming throughput.
+In matmul optimization, the expensive part is often not math but uncertainty: did this shape hit the right branch, is core splitting balanced, and is hardware truly saturated.  
+`MatMul Tiling Analyzer` turns that uncertainty into evidence by replaying real `mat_mul_v3` tiling logic and expanding it into per-core workload views.
 
-`MatMul Tiling Analyzer` turns that uncertainty into verifiable evidence:
-it replays strategy selection with source-level semantics, decodes `tiling_key` and `tiling_data`, and expands the result into per-core task workload views.
+## Why This Project Exists
 
-## About
+- Catch branch and scheduling issues before long profiling loops.
+- Validate inter-core and intra-core partitioning quality for each shape.
+- Expose utilization risks and bottlenecks with concrete per-core load data.
+- Produce clear artifacts for regression reviews and cross-team discussions.
 
-`MatMul Tiling Analyzer` is a tiling analysis and diagnosis toolkit for **Ascend950 (DAV_3510) / MatMulV3**.
-It does not replace runtime behavior and does not rely on heuristic guessing. Instead, it connects host-side branching, kernel dispatch, and scheduler behavior into one traceable chain for tuning diagnosis, regression review, and cross-team communication.
+## Why You Can Trust It
 
-## Why It Matters
+The core principle is **source alignment**, not heuristic approximation.
 
-- Confirm branch correctness before entering long profiling loops.
-- Quantify inter-core and intra-core partitioning quality beyond "it runs".
-- Surface imbalance and utilization loss through per-core tasks and tail behavior.
-- Produce reproducible, reviewable, automation-friendly analysis artifacts.
+- Strategy logic is rewritten in Python from Ascend C `mat_mul_v3`.
+- Branch-by-branch mapping is maintained against the official operator source: [`ops-nn/mat_mul_v3`](https://gitcode.com/cann/ops-nn/tree/master/matmul/mat_mul_v3)
+- Host-side branch selection, `tiling_key` / `tiling_data`, kernel dispatch, and schedule decomposition are connected in one traceable analysis path.
 
-## What You Can Verify
+## What You Get
 
-- **Strategy selection**: `k_equal_zero`, `to_mul`, `basic_streamk`, `basic_aswt`
-- **Branch details**: `streamk_sk` / `streamk_dpsk`, `basic_aswt_a_full_load` / `basic_aswt_b_full_load`
-- **Key semantics**: field-level decoding of `tiling_key` (`api_level`, `model`, `full_load`, `l0c2out`, etc.)
-- **Scheduling result**: inter-core split, intra-core blocks, per-core task lists
-- **Exports**: per-case text/JSON plus batch `summary.csv` / `summary.json`
+Per case:
 
-## Strategy Coverage (Current)
+- selected strategy and source-mapped branch
+- decoded `tiling_key` and key fields
+- relevant `tiling_data` payload
+- inter-core split and intra-core block plan
+- per-core workload summary and kernel task layout
 
-| Strategy | Typical condition in analyzer | Kernel implementation |
-| --- | --- | --- |
-| `k_equal_zero` | `k == 0` with no bias | `MatMulInputKEqZeroClearOutput` |
-| `to_mul` | forced group acc + fp32 + (`m==1` or `n==1`) + `k>=512` | `MatMulToMulActKernel` |
-| `basic_streamk` | `x1_format == ND` and Stream-K capability check passes | `MatMulStreamKActKernel` |
-| `basic_aswt` | default fallback path (including full-load / fixpipe variants) | `MatMulActKernel` / `MatMulFixpipeOptiActKernel` |
+Batch outputs:
 
-## How It Works
-
-```mermaid
-flowchart LR
-    A["Case Input (CLI/CSV)"] --> B["Strategy Selection"]
-    B --> C["Tiling Key Decode"]
-    C --> D["Tiling Data Reconstruction"]
-    D --> E["Scheduler-Level Per-Core Simulation"]
-    E --> F["Text / JSON Reports + Batch Summaries"]
-```
+- `summary.json`
+- `summary.csv`
+- `cases/<testcase>.json`
+- `cases/<testcase>.txt`
 
 ## Quick Start
 
@@ -64,16 +53,10 @@ python -m pip install -e .
 python cli.py --input=cases/quickstart_cases.csv --output-dir=results/quickstart
 ```
 
-Single-case analysis:
+Single case:
 
 ```powershell
 python cli.py --m 2048 --k 4096 --n 256 --dtype bfloat16
-```
-
-You can also use the installed entrypoint:
-
-```powershell
-matmul-tiling-analyzer --m 2048 --k 4096 --n 256 --dtype bfloat16
 ```
 
 Run tests:
@@ -82,24 +65,11 @@ Run tests:
 python -m pytest
 ```
 
-## Output Artifacts
-
-When `--output-dir` is provided, outputs are organized as:
-
-```text
-results/<run_name>/
-  summary.csv
-  summary.json
-  cases/
-    <testcase>.json
-    <testcase>.txt
-```
-
-## Scope & Non-Goals
+## Scope
 
 - Current focus: `mat_mul_v3` tiling analysis
 - Current hardware scope in docs/examples: `Ascend950 (DAV_3510)`
-- Positioning: analysis and diagnosis tool, not a runtime replacement
+- Positioning: analysis/diagnosis tool, not a runtime replacement
 
 ## Documentation
 
