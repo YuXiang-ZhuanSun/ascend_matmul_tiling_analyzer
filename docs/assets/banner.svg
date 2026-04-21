@@ -31,15 +31,15 @@
   <path d="M0 536C126 476 240 454 342 470C482 491 542 595 706 590C884 585 1020 470 1280 510V640H0V536Z" fill="#09111F" fill-opacity="0.28"/>
 
   <g filter="url(#shadow)">
-    <rect x="216" y="144" width="848" height="292" rx="28" fill="#0D1729" fill-opacity="0.72" stroke="rgba(255,255,255,0.14)"/>
+    <rect x="216" y="144" width="848" height="292" rx="28" fill="#0D1729" fill-opacity="0.72" stroke="#FFFFFF" stroke-opacity="0.14"/>
     <rect x="216.75" y="144.75" width="846.5" height="290.5" rx="27.25" stroke="url(#accent)" stroke-opacity="0.45" stroke-width="1.5"/>
   </g>
 
-  <text x="264" y="230" fill="#EAF2FF" font-family="Segoe UI, Arial, sans-serif" font-size="62" font-weight="700" letter-spacing="0.5">
-    MatMul Tiling Analyzer
+  <text x="264" y="226" fill="#EAF2FF" font-family="Segoe UI, Arial, sans-serif" font-size="68" font-weight="760" letter-spacing="0.4">
+    MatMul Tiling
   </text>
-  <text x="266" y="278" fill="#AFC6E9" font-family="Segoe UI, Arial, sans-serif" font-size="23" font-weight="500">
-    Source-grounded tiling analysis for mat_mul_v3 on Ascend950 (DAV_3510)
+  <text x="266" y="274" fill="#AFC6E9" font-family="Segoe UI, Arial, sans-serif" font-size="23" font-weight="600">
+    See branch choice. See per-core load.
   </text>
 
   <g opacity="0.95">
@@ -68,13 +68,13 @@
   </g>
 
   <g>
-    <rect x="850" y="170" width="214" height="214" rx="26" fill="url(#card)" stroke="#3E618F" stroke-opacity="0.55"/>
-    <text x="880" y="215" fill="#EAF2FF" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="700">Core Load</text>
-    <rect x="882" y="246" width="34" height="108" rx="10" fill="#1C385E"/>
-    <rect x="930" y="224" width="34" height="130" rx="10" fill="#2A5A87"/>
-    <rect x="978" y="264" width="34" height="90" rx="10" fill="#68E0CF"/>
-    <rect x="1026" y="202" width="34" height="152" rx="10" fill="#F6B73C"/>
-    <text x="878" y="378" fill="#93AFD2" font-family="Consolas, monospace" font-size="16">AIC workload sketch</text>
+    <rect x="878" y="198" width="176" height="186" rx="24" fill="url(#card)" stroke="#3E618F" stroke-opacity="0.6"/>
+    <text x="898" y="236" fill="#EAF2FF" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="700">Core Load</text>
+    <rect x="910" y="256" width="32" height="96" rx="10" fill="#1C385E"/>
+    <rect x="954" y="234" width="32" height="118" rx="10" fill="#2A5A87"/>
+    <rect x="998" y="272" width="32" height="80" rx="10" fill="#68E0CF"/>
+    <rect x="1022" y="210" width="32" height="142" rx="10" fill="#F6B73C"/>
+    <text x="896" y="372" fill="#93AFD2" font-family="Consolas, monospace" font-size="15">AIC workload</text>
   </g>
 
   <text x="266" y="486" fill="#C6D9F3" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="600">
