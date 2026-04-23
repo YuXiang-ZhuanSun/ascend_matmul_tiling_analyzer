@@ -53,6 +53,14 @@ python -m pip install -e .
 python cli.py --input=cases/quickstart_cases.csv --output-dir=results/quickstart
 ```
 
+启动本地面板：
+
+```powershell
+matmul-tiling-panel
+```
+
+面板会在浏览器中运行，支持 Windows、macOS 和 Linux。你可以手工输入 shape、上传 CSV 用例、查看 selected branch、解码 `tiling_key`，并下钻查看 32 个核心的详细负载。
+
 单 case 分析：
 
 ```powershell
@@ -77,6 +85,7 @@ python -m pytest
 - [English README](./README.en.md)
 - [源码分支映射表](./docs/source_branch_mapping.md)
 - [Ascend950 Tiling Strategy](./docs/ascend950_tiling_strategy.md)
+- [本地面板](./docs/panel.md)
 - [示例输出](./docs/example_outputs.md)
 - [Release Notes v0.1.0](./docs/release_notes_v0.1.0.md)
 - [贡献指南](./CONTRIBUTING.md)

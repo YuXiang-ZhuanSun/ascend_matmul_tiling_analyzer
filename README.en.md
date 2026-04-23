@@ -53,6 +53,14 @@ python -m pip install -e .
 python cli.py --input=cases/quickstart_cases.csv --output-dir=results/quickstart
 ```
 
+Launch the local panel:
+
+```powershell
+matmul-tiling-panel
+```
+
+The panel runs in a browser on Windows, macOS, and Linux. It supports manual shape input, CSV testcase upload, selected branch inspection, `tiling_key` decoding, and 32-core workload drill-down.
+
 Single case:
 
 ```powershell
@@ -77,6 +85,7 @@ python -m pytest
 - [README.zh-CN.md](./README.zh-CN.md)
 - [Source Branch Mapping](./docs/source_branch_mapping.md)
 - [Ascend950 Tiling Strategy](./docs/ascend950_tiling_strategy.md)
+- [Local Panel](./docs/panel.md)
 - [Example Outputs](./docs/example_outputs.md)
 - [Release Notes v0.1.0](./docs/release_notes_v0.1.0.md)
 - [Contributing](./CONTRIBUTING.md)

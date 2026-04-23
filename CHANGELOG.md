@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is inspired by Keep a Changelog, and the project is currently pre-`1.0.0`.
 
+## [0.3.0] - 2026-04-23
+
+### Added
+
+- cross-platform local browser panel via `matmul-tiling-panel`
+- manual shape analysis from the panel
+- CSV testcase upload from the panel
+- 32-core workload heatmap and per-core task drill-down
+- panel smoke tests and CI coverage
+- release workflow for building wheel and source distribution artifacts
+
 ## [0.2.0] - 2026-04-21
 
 ### Added
