@@ -7,7 +7,7 @@
 
 [项目首页](./README.md) | [English README](./README.en.md)
 
-![MatMul Tiling Analyzer Banner](./docs/assets/banner.svg)
+![MatMul Tiling Analyzer Banner](./docs/assets/banner.png)
 
 **像读源码一样读 tiling，像内核工程师一样做性能诊断。**
 

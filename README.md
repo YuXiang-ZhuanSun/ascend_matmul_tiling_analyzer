@@ -7,7 +7,7 @@
 
 [中文 README](./README.zh-CN.md) | [English README](./README.en.md)
 
-![MatMul Tiling Analyzer Banner](./docs/assets/banner.svg)
+![MatMul Tiling Analyzer Banner](./docs/assets/banner.png)
 
 **Tiling. Exposed.**
 

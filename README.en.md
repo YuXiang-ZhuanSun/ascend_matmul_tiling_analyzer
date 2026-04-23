@@ -7,7 +7,7 @@
 
 [Project Home](./README.md) | [中文 README](./README.zh-CN.md)
 
-![MatMul Tiling Analyzer Banner](./docs/assets/banner.svg)
+![MatMul Tiling Analyzer Banner](./docs/assets/banner.png)
 
 **Read tiling like source code. Diagnose performance like a kernel engineer.**
 
