@@ -253,6 +253,7 @@ PANEL_HTML = r"""<!doctype html>
       --violet: #9b68f0;
     }
     * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
     body {
       margin: 0;
       min-height: 100vh;
@@ -441,7 +442,7 @@ PANEL_HTML = r"""<!doctype html>
         </section>
       </div>
       <div class="grid fields" style="margin-top:14px">
-        <section class="card"><h2>Input Shape</h2><pre id="shapeInfo">-</pre></section>
+        <section class="card"><h2>Selected Case</h2><pre id="shapeInfo">-</pre></section>
         <section class="card"><h2>Tiling Fields</h2><pre id="tilingFields">-</pre></section>
         <section class="card"><h2>Source Mapping</h2><pre id="sourceMapping">-</pre></section>
       </div>
