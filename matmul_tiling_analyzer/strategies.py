@@ -129,6 +129,59 @@ def _get_l0c2out_streamk(case: CaseInput) -> int:
     return MAT_MUL_ON_THE_FLY
 
 
+def _is_single_round(case: CaseInput, state: dict) -> bool:
+    m_cnt = ceil_div(case.m, state["single_core_m"])
+    n_cnt = ceil_div(case.n, state["single_core_n"])
+    return m_cnt * n_cnt <= AIC_NUM
+
+
+def _check_a_full_load(case: CaseInput, state: dict, l0c2out: int) -> bool:
+    if l0c2out != MAT_MUL_ON_THE_FLY or case.n < CACHELINE or _is_single_round(case, state):
+        return False
+    max_step_m = max(min_sqrt_factor(AIC_NUM) - 1, 1)
+    if case.m >= max_step_m * state["base_m"]:
+        return False
+    m_aligned = ceil_align(case.m, BASIC_BLOCK_SIZE_16)
+    k_align = BASIC_BLOCK_SIZE_16 if case.transpose_x1 else BLOCK_BYTE_SIZE // DTYPE_SIZE[case.dtype]
+    k_aligned = ceil_align(case.k, k_align)
+    a_l1_size = k_aligned * m_aligned * DTYPE_SIZE[case.dtype]
+    bias_size = 0
+    if case.has_bias and case.bias_dtype is not None:
+        basic_n_l1 = min(ceil_align(case.n, BASIC_BLOCK_SIZE_16), state["base_n"] * DB_SIZE)
+        bias_size = basic_n_l1 * DTYPE_SIZE.get(case.bias_dtype, DTYPE_SIZE[case.out_dtype])
+    if a_l1_size + bias_size > (L1_SIZE * 3) // 4:
+        return False
+    m_cnt = ceil_div(case.m, state["single_core_m"])
+    n_cnt = ceil_div(case.n, state["single_core_n"])
+    a_l1_full_mte2 = case.m * AIC_NUM + case.n * m_cnt
+    base_mte2 = case.m * n_cnt + case.n * m_cnt
+    if case.m > BASIC_BLOCK_SIZE_256 and float(base_mte2) < 1.2 * float(a_l1_full_mte2):
+        return False
+    return True
+
+
+def _check_b_full_load(case: CaseInput, state: dict) -> bool:
+    if case.m < CACHELINE or _is_single_round(case, state):
+        return False
+    max_step_n = max(min_sqrt_factor(AIC_NUM) - 1, 1)
+    if case.n >= max_step_n * state["base_n"]:
+        return False
+    k_align = BLOCK_BYTE_SIZE // DTYPE_SIZE[case.dtype] if case.transpose_x2 else BASIC_BLOCK_SIZE_16
+    k_aligned = ceil_align(case.k, k_align)
+    n_aligned = ceil_align(case.n, BASIC_BLOCK_SIZE_16)
+    b_l1_size = k_aligned * n_aligned * DTYPE_SIZE[case.dtype]
+    bias_size = n_aligned * DTYPE_SIZE.get(case.bias_dtype, DTYPE_SIZE[case.out_dtype]) if case.has_bias and case.bias_dtype is not None else 0
+    if b_l1_size + bias_size > (L1_SIZE * 3) // 4:
+        return False
+    m_cnt = ceil_div(case.m, state["single_core_m"])
+    n_cnt = ceil_div(case.n, state["single_core_n"])
+    b_l1_full_mte2 = case.n * AIC_NUM + case.m * n_cnt
+    base_mte2 = case.m * n_cnt + case.n * m_cnt
+    if case.n > BASIC_BLOCK_SIZE_256 and float(base_mte2) < 1.2 * float(b_l1_full_mte2):
+        return False
+    return True
+
+
 def _reset_base(case: CaseInput, state: dict) -> None:
     state.update(_base_state(case))
 
@@ -238,8 +291,28 @@ def _calc_tail_basic_block(case: CaseInput, state: dict) -> None:
 @lru_cache(maxsize=1)
 def _load_balance_tables():
     text = ASW_LOADBALANCE_TABLE.read_text(encoding="utf-8")
-    lookup = ast.literal_eval("[" + re.search(r"BLOCK_LOOKUP_TABLE = \{(.*?)\};", text, re.S).group(1) + "]")
-    table = ast.literal_eval("[" + re.search(r"BLOCK_TABLE = \{(.*?)\};", text, re.S).group(1) + "]")
+    lookup_match = re.search(r"BLOCK_LOOKUP_TABLE = \{(.*?)\};", text, re.S)
+    table_match = re.search(r"BLOCK_TABLE = \{(.*?)\};", text, re.S)
+    if lookup_match is None or table_match is None:
+        raise ValueError("Failed to locate load balance tables in source header.")
+
+    def _parse_entries(block_text: str, expected_len: int) -> list[tuple]:
+        entries = []
+        for raw_entry in re.findall(r"\{([^{}]+)\}", block_text):
+            parts = [part.strip() for part in raw_entry.split(",")]
+            if len(parts) != expected_len:
+                raise ValueError(f"Unexpected load balance entry: {raw_entry}")
+            parsed = []
+            for part in parts:
+                if "." in part:
+                    parsed.append(float(part))
+                else:
+                    parsed.append(int(part))
+            entries.append(tuple(parsed))
+        return entries
+
+    lookup = _parse_entries(lookup_match.group(1), 3)
+    table = _parse_entries(table_match.group(1), 5)
     return lookup, table
 
 
@@ -445,11 +518,11 @@ def analyze_basic_aswt(case: CaseInput) -> AnalysisResult:
     full_load = MAT_MUL_NO_FULL_LOAD
     branch = "basic_aswt"
     notes = ["Initial branch follows `DoNormOpTiling`."]
-    if l0c2out == MAT_MUL_ON_THE_FLY and case.n >= CACHELINE and case.m < max(min_sqrt_factor(AIC_NUM) - 1, 1) * state["base_m"] and case.m > 0:
+    if _check_a_full_load(case, state, l0c2out):
         full_load = MAT_MUL_A_FULL_LOAD
         branch = "basic_aswt_a_full_load"
         notes.append("Matched `CheckAL1FullLoad`.")
-    elif case.m >= CACHELINE and case.n < max(min_sqrt_factor(AIC_NUM) - 1, 1) * state["base_n"] and case.n > 0:
+    elif _check_b_full_load(case, state):
         full_load = MAT_MUL_B_FULL_LOAD
         branch = "basic_aswt_b_full_load"
         notes.append("Matched `CheckBL1FullLoad`.")
