@@ -18,3 +18,9 @@ def test_parse_extended_csv_with_transpose():
     assert target.m == 2048
     assert target.k == 32
     assert target.n == 64
+
+
+def test_parse_reference_csv_skips_unsupported_batch_rows():
+    cases = parse_cases_from_csv(Path("cases/refeable_result.csv"))
+    assert len(cases) == 198
+    assert all(case.op_name == "mat_mul_v3" for case in cases)

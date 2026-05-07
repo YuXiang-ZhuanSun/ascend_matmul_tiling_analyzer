@@ -58,6 +58,15 @@ def _select_input_shapes(stc_inputs: Any, stc_ori_inputs: Any) -> Any:
     return stc_ori_inputs if stc_ori_inputs else stc_inputs
 
 
+def _is_supported_matmul_row(row: dict[str, str], input_shapes: Any) -> bool:
+    op_name = str(_first_present(row, "op_name", "stc_op_name", default="mat_mul_v3"))
+    if op_name != "mat_mul_v3":
+        return False
+    if len(input_shapes) < 2 or input_shapes[0] is None or input_shapes[1] is None:
+        return False
+    return len(input_shapes[0]) == 2 and len(input_shapes[1]) == 2
+
+
 def _derive_mkn(input_shapes: Any, transpose_x1: bool, transpose_x2: bool) -> tuple[int, int, int]:
     a_shape = input_shapes[0]
     b_shape = input_shapes[1]
@@ -98,6 +107,8 @@ def parse_cases_from_csv(path: str | Path) -> list[CaseInput]:
             transpose_x2 = bool(attrs.get("transpose_x2", runtime_attrs.get("transpose_x2", False)))
             stc_inputs, stc_ori_inputs = _parse_shapes(row)
             input_shapes = _select_input_shapes(stc_inputs, stc_ori_inputs)
+            if not _is_supported_matmul_row(row, input_shapes):
+                continue
             m, k, n = _derive_mkn(input_shapes, transpose_x1, transpose_x2)
             input_dtypes, output_dtypes = _parse_dtypes(row)
             has_bias = len(input_shapes) > 2 and input_shapes[2] is not None
