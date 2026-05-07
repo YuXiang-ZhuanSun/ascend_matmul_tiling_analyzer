@@ -27,6 +27,7 @@ dependencies = []
 [project.scripts]
 matmul-tiling-analyzer = "matmul_tiling_analyzer.cli:main"
 matmul-tiling-panel = "matmul_tiling_analyzer.panel:main"
+matmul-tiling-check-reference = "matmul_tiling_analyzer.reference_check:main"
 
 [tool.setuptools]
 packages = ["matmul_tiling_analyzer"]
