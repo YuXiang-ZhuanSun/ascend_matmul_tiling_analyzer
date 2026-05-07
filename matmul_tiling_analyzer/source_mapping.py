@@ -1,3 +1,5 @@
+from importlib.resources import files
+
 from .constants import OP_HOST_ROOT
 
 
@@ -35,3 +37,12 @@ SOURCE_MAP = {
 
 ASW_LOADBALANCE_TABLE = OP_HOST_ROOT / "matmul_v3_asw_loadbalance_table.h"
 
+
+def read_asw_loadbalance_table_text() -> str:
+    if ASW_LOADBALANCE_TABLE.exists():
+        return ASW_LOADBALANCE_TABLE.read_text(encoding="utf-8")
+    return (
+        files("matmul_tiling_analyzer")
+        .joinpath("data/matmul_v3_asw_loadbalance_table.h")
+        .read_text(encoding="utf-8")
+    )

@@ -5,7 +5,7 @@ from functools import lru_cache
 from .constants import *
 from .models import AnalysisResult, CaseInput
 from .schedulers import simulate_basic_aswt, simulate_basic_streamk, simulate_to_mul
-from .source_mapping import ASW_LOADBALANCE_TABLE, SOURCE_MAP
+from .source_mapping import SOURCE_MAP, read_asw_loadbalance_table_text
 from .tiling_key import make_key_fields, pack_tiling_key
 from .utils import ceil_align, ceil_div, floor_align, min_sqrt_factor
 
@@ -290,7 +290,7 @@ def _calc_tail_basic_block(case: CaseInput, state: dict) -> None:
 
 @lru_cache(maxsize=1)
 def _load_balance_tables():
-    text = ASW_LOADBALANCE_TABLE.read_text(encoding="utf-8")
+    text = read_asw_loadbalance_table_text()
     lookup_match = re.search(r"BLOCK_LOOKUP_TABLE = \{(.*?)\};", text, re.S)
     table_match = re.search(r"BLOCK_TABLE = \{(.*?)\};", text, re.S)
     if lookup_match is None or table_match is None:

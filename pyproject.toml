@@ -32,5 +32,8 @@ matmul-tiling-check-reference = "matmul_tiling_analyzer.reference_check:main"
 [tool.setuptools]
 packages = ["matmul_tiling_analyzer"]
 
+[tool.setuptools.package-data]
+matmul_tiling_analyzer = ["data/*.h"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
