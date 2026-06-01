@@ -1,0 +1,7 @@
+interface:
+  display_name: "算子 Tiling 复刻工具"
+  short_description: "从算子源码和参考用例生成可安装、可验证的 GitHub 风格 tiling 复刻 CLI 项目。"
+  default_prompt: "使用 $op-tiling-workflow-zh，根据算子源码和参考用例创建 tiling 复刻工具，支持 python -m pip install -e . 和 python cli.py --input=cases/quickstart_cases.csv --output-dir=results/quickstart，并输出 branch、tiling-key、kernel dispatch 与每个 AIC/AIV 的负载。"
+
+policy:
+  allow_implicit_invocation: true
