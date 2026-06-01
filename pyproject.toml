@@ -1,39 +1,12 @@
 [build-system]
-requires = ["setuptools>=77"]
+requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "matmul-tiling-analyzer"
-version = "0.3.0"
-description = "Ascend950 MatMulV3 tiling analysis toolkit."
-readme = "README.md"
-requires-python = ">=3.10"
-authors = [
-  { name = "Xiang" }
-]
-license = "MIT"
-license-files = ["LICENSE"]
-keywords = ["ascend950", "matmul", "tiling", "analyzer", "dav3510"]
-classifiers = [
-  "Development Status :: 3 - Alpha",
-  "Intended Audience :: Developers",
-  "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.10",
-  "Topic :: Software Development :: Build Tools",
-  "Topic :: Scientific/Engineering",
-]
-dependencies = []
+name = "matmul-tiling-replay"
+version = "0.1.0"
+description = "MatMulV3 tiling-key replay and source-trace analyzer"
+requires-python = ">=3.9"
 
-[project.scripts]
-matmul-tiling-analyzer = "matmul_tiling_analyzer.cli:main"
-matmul-tiling-panel = "matmul_tiling_analyzer.panel:main"
-matmul-tiling-check-reference = "matmul_tiling_analyzer.reference_check:main"
-
-[tool.setuptools]
-packages = ["matmul_tiling_analyzer"]
-
-[tool.setuptools.package-data]
-matmul_tiling_analyzer = ["data/*.h"]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
+[tool.setuptools.packages.find]
+where = ["src"]

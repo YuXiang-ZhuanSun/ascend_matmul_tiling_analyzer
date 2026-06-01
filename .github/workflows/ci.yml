@@ -26,13 +26,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e .
-          python -m pip install pytest
 
       - name: Run tests
-        run: python -m pytest
+        run: python -m unittest discover -s tests -v
 
       - name: Smoke test CLI
-        run: python ./cli.py --input=./cases/quickstart_cases.csv --output-dir=./results/ci_smoke --format=text
-
-      - name: Smoke test panel API
-        run: python -c "from matmul_tiling_analyzer.panel import analyze_shape_payload; payload = analyze_shape_payload({'m': 2048, 'k': 4096, 'n': 256, 'dtype': 'bfloat16'}); assert payload['dashboard']['active_cores'] >= 1"
+        run: python ./cli.py --input=./cases/quickstart_cases.csv --output-dir=./results/ci_smoke

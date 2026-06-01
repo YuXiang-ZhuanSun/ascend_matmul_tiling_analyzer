@@ -8,15 +8,15 @@ Describe the change in 2-5 sentences.
 
 ## Validation
 
-- [ ] `python -m pytest`
+- [ ] `python -m unittest discover -s tests -v`
 - [ ] `python .\cli.py --input=.\cases\quickstart_cases.csv --output-dir=.\results\quickstart`
 - [ ] updated documentation if behavior changed
 
 ## Source Mapping Impact
 
 - [ ] no source mapping change
-- [ ] updated `matmul_tiling_analyzer/source_mapping.py`
-- [ ] updated `docs/source_branch_mapping.md`
+- [ ] updated `src/matmul_tiling_replay/replay.py`
+- [ ] updated `docs/source-map.md`
 
 ## Notes
 
